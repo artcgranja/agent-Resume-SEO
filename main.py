@@ -34,7 +34,6 @@ def main():
         "Reescreva o currículo para otimizar meu SEO.",
         files=file_dicts,
         stream=True,
-        show_full_reasoning=True,
         show_tool_calls=True,
     )
 

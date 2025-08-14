@@ -15,7 +15,6 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://resume:resume@localhost:5
 seo_agent = Agent(
     name="SEO Agent",
     role="Especialista em Desenvolvimento de Currículos Profissionais",
-    reasoning=True,
     model=OpenAIChat(id="gpt-4.1-2025-04-14"),
     tools=[save_resume],
     storage=PostgresStorage(table_name="agent_sessions", db_url=DATABASE_URL),
