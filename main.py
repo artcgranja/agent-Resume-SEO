@@ -1,7 +1,7 @@
 def main():
     from pathlib import Path
-    import mimetypes
-    from app.agents import seo_agent
+    from uuid import uuid4
+    from app.agents import create_seo_agent
 
     files_dir = Path(__file__).resolve().parent / "file"
     allowed_exts = {".pdf", ".txt", ".md", ".csv", ".html", ".xml", ".rtf", ".py", ".js", ".docx"}
@@ -30,13 +30,21 @@ def main():
             file_entry["mime_type"] = mime_type
         file_dicts.append(file_entry)
 
+    session_id = str(uuid4())
+    seo_agent = create_seo_agent(session_id)
+
     seo_agent.print_response(
-        "Reescreva o currículo para otimizar meu SEO.",
+        "<system>This is the resume you will be working on, do not responde to this message, the next massage will be the start of your conversation with the user.</system>",
         files=file_dicts,
         stream=True,
         show_tool_calls=True,
     )
 
+    while True:
+        input_ = input()
+        if input_ == "exit":
+            break
+        seo_agent.print_response(input_, stream=True, show_tool_calls=True)
 
 if __name__ == "__main__":
     main()
