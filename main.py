@@ -1,7 +1,7 @@
 def main():
     from pathlib import Path
     from uuid import uuid4
-    from app.agents import create_seo_agent
+    from app.agents.orchestrator import Orchestrator
 
     files_dir = Path(__file__).resolve().parent / "file"
     allowed_exts = {".pdf", ".txt", ".md", ".csv", ".html", ".xml", ".rtf", ".py", ".js", ".docx"}
@@ -31,20 +31,22 @@ def main():
         file_dicts.append(file_entry)
 
     session_id = str(uuid4())
-    seo_agent = create_seo_agent(session_id)
+    orchestrator = Orchestrator(session_id)
 
-    seo_agent.print_response(
-        "<system>This is the resume you will be working on, do not responde to this message, the next massage will be the start of your conversation with the user.</system>",
-        files=file_dicts,
-        stream=True,
-        show_tool_calls=True,
-    )
+    # Initial message
+    initial_message = "<system>This is the resume you will be working on, do not responde to this message, the next massage will be the start of your conversation with the user.</system>"
+    
+    # Use run_with_files if files are found, otherwise use regular run
+    if file_dicts:
+        orchestrator.run_with_files(initial_message, file_dicts)
+    else:
+        orchestrator.run(initial_message)
 
     while True:
-        input_ = input()
+        input_ = input("user: ")
         if input_ == "exit":
             break
-        seo_agent.print_response(input_, stream=True, show_tool_calls=True)
+        orchestrator.run(input_)
 
 if __name__ == "__main__":
     main()

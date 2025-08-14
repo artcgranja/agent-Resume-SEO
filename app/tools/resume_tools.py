@@ -44,6 +44,8 @@ def get_resume(name: str) -> ResumeSchema:
     """
     with get_db() as db:
         db_resume = db.query(Resume).filter(Resume.name == name).first()
+        if db_resume is None:
+            raise ValueError(f"Resume not found: {name}")
         return ResumeSchema(name=db_resume.name, content=db_resume.content)
     
 @tool
@@ -57,6 +59,8 @@ def delete_resume(name: str) -> str:
     """
     with get_db() as db:
         db_resume = db.query(Resume).filter(Resume.name == name).first()
+        if db_resume is None:
+            raise ValueError(f"Resume not found: {name}")
         db.delete(db_resume)
         db.commit()
     return "Resume deleted successfully."
@@ -73,6 +77,8 @@ def edit_resume(name: str, content: str) -> str:
     """
     with get_db() as db:
         db_resume = db.query(Resume).filter(Resume.name == name).first()
+        if db_resume is None:
+            raise ValueError(f"Resume not found: {name}")
         db_resume.content = content
         db.commit()
         db.refresh(db_resume)
