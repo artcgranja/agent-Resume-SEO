@@ -1,0 +1,18 @@
+[project]
+name = "agent-resume-seo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "agno>=0.2.0",
+    "python-docx>=1.1.2",
+    "pdfminer.six>=20231228",
+    "python-multipart>=0.0.9",
+    "pydantic>=2.6.0",
+    "psycopg[binary]>=3.1",
+    "python-dotenv>=1.0.1",
+    "openai>=1.9.0",
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.10"
+]
