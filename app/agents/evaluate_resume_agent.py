@@ -17,13 +17,14 @@ tools = [save_evaluate_resume, get_evaluate_resume, list_evaluate_resumes, delet
 def create_evaluate_resume_agent(session_id: str) -> Agent:
     evaluate_resume_agent = Agent(
         name="Evaluate Resume Agent",
-        role="Especialista em Avaliação de Currículos Profissionais",
+        role="Specialist in evaluete the fit of the resume to the job.",
+        description="Specialist in evaluete the fit of the resume to the job, can create new evaluations and list, edit, delete them.",
         model=OpenAIChat(id="gpt-4.1-2025-04-14"),
         tools=tools,
         session_id=session_id,
         storage=PostgresStorage(table_name="agent_sessions", db_url=DATABASE_URL),
         add_history_to_messages=True,
-        description=SYSTEM_PROMPT,
+        instructions=SYSTEM_PROMPT,
         markdown=True,
     )
     return evaluate_resume_agent

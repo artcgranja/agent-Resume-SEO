@@ -34,7 +34,7 @@ def main():
     orchestrator = Orchestrator(session_id)
 
     # Initial message
-    initial_message = "<system>This is the resume you will be working on, do not responde to this message, the next massage will be the start of your conversation with the user.</system>"
+    initial_message = "┃ Poderia analisar meu curriculo, como um avaliador generico para saber se esta no bom caminho "
     
     # Use run_with_files if files are found, otherwise use regular run
     if file_dicts:

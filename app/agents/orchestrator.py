@@ -4,7 +4,6 @@ from app.agents.seo_resume_agent import create_seo_agent
 from app.agents.evaluate_resume_agent import create_evaluate_resume_agent
 from agno.models.openai import OpenAIChat
 from agno.storage.postgres import PostgresStorage
-from app.agents.web_agent import create_web_agent
 from agno.media import File
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://resume:resume@localhost:5452/resume_db")
@@ -17,7 +16,6 @@ class Orchestrator:
             members=[
                 create_seo_agent(session_id),
                 create_evaluate_resume_agent(session_id),
-                create_web_agent(session_id),
             ],
             mode="collaborate",
             session_id=self.session_id,
