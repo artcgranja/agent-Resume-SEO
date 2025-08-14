@@ -1,17 +1,20 @@
-## Agent Resume SEO
+## Agent Resume SEO — Multi‑Agent Chat
 
-Assistente que reescreve e otimiza currículos para SEO/ATS usando um agente (`agno`) com modelo OpenAI. Ele lê arquivos colocados na pasta `file/` (PDF, TXT, MD, CSV, HTML, XML, RTF, PY, JS e DOCX) e gera uma versão otimizada diretamente no console.
+Assistente multi‑agente (baseado em `agno`) para otimizar e avaliar currículos com colaboração de agentes especializados e busca na Web. Lê arquivos na pasta `file/` (PDF, TXT, MD, CSV, HTML, XML, RTF, PY, JS, DOCX) e interage no terminal em um loop estilo chat.
 
 ### Principais recursos
-- **Otimização para ATS e SEO** com prompt especializado em PT‑BR (ver `app/promts/system_promt.py`).
-- **Leitura automática** de arquivos na pasta `file/`.
-- **Streaming de resposta** no terminal, com exibição de raciocínio (opcional).
-- **Persistência** de sessões em Postgres (via `docker-compose.yml`).
+- **Time de agentes (Team)** em modo collaborate:
+  - **SEO Agent**: reescrita/otimização para ATS/SEO.
+  - **Evaluate Agent**: avaliação do currículo frente a vagas.
+  - **Web Agent**: pesquisa (DuckDuckGo) para contexto de vagas/empresas.
+- **Persistência** de sessões no Postgres (tanto dos agentes quanto do time).
+- **Arquivos anexados automaticamente** de `file/` via `agno.media.File`.
+- **Chat interativo** no terminal com histórico.
 
 ## Requisitos
 - Python 3.12+
-- Conta/Chave da OpenAI (variável `OPENAI_API_KEY`)
-- Docker e Docker Compose (opcional, para o Postgres local)
+- Chave da OpenAI (`OPENAI_API_KEY`)
+- Postgres local (via Docker Compose, opcional)
 
 ## Instalação (local)
 1) Clone o repositório
@@ -24,73 +27,70 @@ cd agent-Resume-SEO
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # macOS/Linux
-# No Windows: .venv\\Scripts\\activate
+# Windows: .venv\\Scripts\\activate
 ```
 
 3) Instale as dependências
 ```bash
-pip install "agno>=0.2.0" "python-docx>=1.1.2" "pdfminer.six>=20231228" \
-            "python-multipart>=0.0.9" "pydantic>=2.6.0" "psycopg[binary]>=3.1" \
-            "python-dotenv>=1.0.1" "openai>=1.9.0" "sqlalchemy>=2.0.0" "psycopg2-binary>=2.9.10"
+pip install "agno>=0.2.0" \
+            "python-docx>=1.1.2" "pdfminer.six>=20231228" \
+            "python-multipart>=0.0.9" "pydantic>=2.6.0" \
+            "psycopg[binary]>=3.1" "python-dotenv>=1.0.1" \
+            "openai>=1.9.0" "sqlalchemy>=2.0.0" "psycopg2-binary>=2.9.10"
 ```
+Nota: Se aparecer aviso do `duckduckgo_search` renomeado, instale `ddgs` no seu ambiente virtual.
 
 ## Configuração
-1) Crie um arquivo `.env` na raiz com sua chave da OpenAI e (opcionalmente) a URL do banco:
+Crie `.env` na raiz:
 ```env
 OPENAI_API_KEY=sk-...
-# Opcional: se não setar, usa o default que aponta para o Docker Compose abaixo
 DATABASE_URL=postgresql://resume:resume@localhost:5452/resume_db
 ```
 
-2) (Opcional) Suba o Postgres com Docker Compose
+Suba o Postgres com Docker (opcional):
 ```bash
 docker compose up -d
 ```
-O agente usará a tabela `agent_sessions` (configurado em `app/agents.py`).
 
-## Como usar
-1) Coloque seus arquivos de currículo na pasta `file/`. Exemplos:
-   - `file/Meu Curriculo.pdf`
-   - `file/Resume.txt`
+## Banco de dados
+- Modelos próprios: `resumes` e `evaluate_resumes`.
+- Storage do agno: time usa `team_sessions`; agentes usam `agent_sessions`.
 
-2) Execute o agente
+Inicialize/sincronize tabelas dos modelos próprios:
+```bash
+python scripts/init_db.py init
+```
+Outros comandos úteis:
+```bash
+python scripts/init_db.py check   # testa conexão
+python scripts/init_db.py reset   # drop + create de todas as tabelas dos modelos próprios
+```
+
+## Executando o chat
+1) Coloque seus arquivos em `file/` (por exemplo, `CV.pdf`).
+2) Rode:
 ```bash
 python main.py
 ```
-O agente imprimirá a resposta no console. Por padrão, o `main.py` envia a mensagem:
-```python
-"Reescreva o currículo para otimizar meu SEO."
-```
-e anexa todos os arquivos suportados encontrados em `file/`.
+O app:
+- Lê arquivos suportados em `file/` e os envia via `run_with_files(...)`.
+- Inicia um loop de chat. Digite suas mensagens após `user:`. Para sair, digite `exit`.
 
-## Personalização
-- Mensagem inicial: edite em `main.py` a chamada `seo_agent.print_response(...)` e altere o primeiro argumento (string).
-- Extensões suportadas: ajuste `allowed_exts` em `main.py`.
-- MIME types: ajuste `ext_to_allowed_mime` em `main.py`. O `agno` valida apenas alguns tipos (por exemplo `application/pdf`, `text/plain`, `text/md`, `text/csv`, `text/html`, `text/xml`, `text/rtf`, `text/javascript`, `text/x-python`). Para tipos fora dessa lista, o código omite o `mime_type` e envia apenas `content` + `name`.
-- Prompt do sistema (estratégia de escrita/otimização): configure em `app/promts/system_promt.py`.
-- Modelo: em `app/agents.py`, a linha `model=OpenAIChat(id="gpt-4.1-2025-04-14")` pode ser alterada conforme sua conta OpenAI.
+## Arquitetura
+- `app/agents/orchestrator.py`: cria um `Team` (modo `collaborate`) com:
+  - `SEO Agent` (`app/agents/seo_resume_agent.py`)
+  - `Evaluate Agent` (`app/agents/evaluate_resume_agent.py`)
+  - `Web Agent` (`app/agents/web_agent.py`)
+- `main.py`: coleta arquivos de `file/` e inicia a conversa usando `Orchestrator.run_with_files(...)`.
+- `app/tools/*`: ferramentas expostas aos agentes para salvar/listar/editar/recuperar currículos e avaliações.
 
-## Estrutura do projeto
-- `main.py`: ponto de entrada; coleta arquivos em `file/` e chama o agente.
-- `app/agents.py`: instancia e configura o `Agent` (modelo, storage, prompt do sistema).
-- `app/promts/system_promt.py`: prompt do sistema detalhado para otimização de currículos.
-- `docker-compose.yml`: serviço Postgres para persistência das sessões.
-- `file/`: coloque aqui os arquivos do currículo.
-
-## Erros comuns e soluções
-- ValidationError: "Input should be a valid dictionary or instance of File"
-  - Causa: enviar `BufferedReader` para `files`.
-  - Solução: já implementado em `main.py` — agora enviamos dicionários compatíveis com `agno.media.File`:
-    ```python
-    {"content": bytes, "name": "arquivo.pdf", "mime_type": "application/pdf"}
-    ```
-- Falta de variável `OPENAI_API_KEY`
-  - Defina `OPENAI_API_KEY` no `.env` ou ambiente.
-- Banco não sobe/conecta
-  - Rode `docker compose up -d` e confirme porta `5452` livre.
+## Dicas e erros comuns
+- "Resume not found": salve primeiro via ferramenta (o agente pode chamar `save_resume`).
+- `relation "evaluate_resumes" does not exist`: rode `python scripts/init_db.py init` para criar as tabelas dos modelos.
+- Aviso DuckDuckGo: instale `ddgs` no ambiente virtual quando solicitado.
+- Erros de schema do storage do agno (colunas como `team_id`): use nomes de tabelas novas (`team_sessions` para Team) ou deixe o agno criar/atualizar automaticamente conforme sua versão. Se já existir uma tabela antiga conflitante, renomeie ou esvazie.
 
 ## Convenção de commits
-Use o padrão:
 - `[FEAT]`: nova funcionalidade
 - `[FIX]`: correção de bug
 - `[REFACTOR]`: refatoração sem mudança de funcionalidade
@@ -108,4 +108,4 @@ Exemplos:
 ```
 
 ## Licença
-Defina aqui a licença do projeto (ex.: MIT). Se ainda não houver, adicione um arquivo `LICENSE` posteriormente.
+Defina aqui a licença do projeto (ex.: MIT). Se ainda não houver, adicione um arquivo `LICENSE`.
