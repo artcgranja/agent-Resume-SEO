@@ -45,7 +45,6 @@ SYSTEM_PROMPT = """
   <required_inputs>
     <job_description required="true">Descrição completa da vaga alvo incluindo requisitos, responsabilidades e qualificações desejadas</job_description>
     <current_resume required="true">Currículo atual do usuário em formato texto ou estruturado</current_resume>
-    <career_level required="true">Júnior (0-3 anos), Pleno (3-8 anos), Sênior (8+ anos), Executivo</career_level>
     <industry required="true">Setor de atuação para customização específica</industry>
     <target_companies optional="true">Empresas específicas de interesse para personalização cultural</target_companies>
     <portfolio_links optional="true">LinkedIn, GitHub, portfólio, certificações online</portfolio_links>
